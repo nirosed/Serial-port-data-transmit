@@ -31,6 +31,22 @@ module UartTx
 			.bpsClk(bpsClk)
 			);
 	
+	reg [3:0] bpsFrameNum;// 波特率帧计数（状态机的状态）
+	always @ (posedge clk or negedge reset)
+	begin
+		if (!reset)
+			bpsFrameNum <= 1'd0;
+		else if (bpsFrameNum == 4'd11)
+			bpsFrameNum <= 1'd0;
+		else if (txEnable)
+			begin
+				if (bpsClk)
+					bpsFrameNum <= bpsFrameNum + 1'd1;
+			end
+		else
+			bpsFrameNum <= 1'd0;
+	end
+
 	reg isCount;
 	always @(posedge clk or negedge reset)
 	begin
@@ -48,22 +64,6 @@ module UartTx
 	end
 	assign countEnable = isCount;
 	
-	reg [3:0] bpsFrameNum;// 波特率帧计数（状态机的状态）
-	always @ (posedge clk or negedge reset)
-	begin
-		if (!reset)
-			bpsFrameNum <= 1'd0;
-		else if (bpsFrameNum == 4'd11)
-			bpsFrameNum <= 1'd0;
-		else if (txEnable)
-			begin
-				if (bpsClk)
-					bpsFrameNum <= bpsFrameNum + 1'd1;
-			end
-		else
-			bpsFrameNum <= 1'd0;
-	end
-
 	// uartTxDone 发送完毕信号，1为完成，且完成后1只持续一个时钟周期
 	reg isDone;
 	always @(posedge clk or negedge reset)
